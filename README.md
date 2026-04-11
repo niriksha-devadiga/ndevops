@@ -1,11 +1,11 @@
-# Task 3: Container Monitoring
+# Task 1: Server Setup and SSH Configuration
 
-> This task demonstrates automated monitoring of Docker containers using a shell script and cron jobs to log CPU and memory usage.
+> This task demonstrates secure server access using SSH key-based authentication, a fundamental DevOps practice.
 
 ---
 
 ## Objective
-To monitor Docker container CPU and memory usage and log it with timestamps automatically.
+To configure secure server access by setting up a Linux virtual machine and enabling SSH key-based authentication for passwordless login.
 
 ---
 
@@ -16,73 +16,93 @@ To monitor Docker container CPU and memory usage and log it with timestamps auto
 
 ---
 
-## Step 1: Create Monitoring Directory
-```bash
-sudo mkdir -p /opt/container-monitor/logs
-```
+## Step 1: Provision Linux Server
+A local Ubuntu virtual machine was created using VirtualBox.
 
 ---
 
-## Step 2: Create Monitoring Script
+## Step 2: Install and Configure SSH Server
+
+### Install OpenSSH Server
 ```bash
-nano monitor.sh
+sudo apt update
+sudo apt install openssh-server -y
 ```
 
-### Script Content
+### Start SSH Service
 ```bash
-#!/bin/bash
-
-CONTAINER_NAME=$(docker ps --format "{{.Names}}" | head -n 1)
-TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
-STATS=$(docker stats $CONTAINER_NAME --no-stream --format "{{.CPUPerc}} {{.MemUsage}}")
-
-echo "$TIMESTAMP | $STATS" >> /opt/container-monitor/logs/monitor.log
+sudo systemctl start ssh
 ```
 
----
-
-## Step 3: Make Script Executable
+### Enable SSH on Boot
 ```bash
-chmod +x monitor.sh
+sudo systemctl enable ssh
 ```
 
----
-
-## Step 4: Automate Using Cron Job
+### Verify SSH Status
 ```bash
-crontab -e
-```
-
-### Add the following line:
-```bash
-* * * * * /path/to/monitor.sh
-```
-
----
-
-## Step 5: Verify Logs
-```bash
-cat /opt/container-monitor/logs/monitor.log
+sudo systemctl status ssh
 ```
 
 Output shows:
-- Logs generated every minute  
-- Includes timestamp, CPU usage, and memory usage  
+- SSH service is **active (running)**
+- Listening on port **22**
+
+---
+
+## Step 3: Get Server IP Address
+```bash
+ip a
+```
+
+IP:
+```
+127.0.0.1
+```
+
+---
+
+## Step 4: Generate SSH Key Pair
+```bash
+ssh-keygen
+```
+
+- Key type: ed25519  
+- Private key: `~/.ssh/id_ed25519`  
+- Public key: `~/.ssh/id_ed25519.pub`  
+
+---
+
+## 🔑 Step 5: Configure Passwordless SSH Login
+
+### Copy Public Key to Server
+```bash
+ssh-copy-id niriksha@127.0.0.1
+```
+
+### Connect to Server
+```bash
+ssh niriksha@127.0.0.1
+```
+
+Passwordless login enabled using SSH keys.
 
 ---
 
 ## Relevant Files
-- `monitor.sh`
-- `/opt/container-monitor/logs/monitor.log`
+- `~/.ssh/id_ed25519` (Private Key)
+- `~/.ssh/id_ed25519.pub` (Public Key)
+- `/etc/ssh/sshd_config` (SSH configuration file)
 
 ---
 
-## Expected Outcome
-- Logs generated automatically every minute  
-- Captures container CPU and memory usage  
-- Monitoring implemented using script + cron  
+## Expected Outcome Achieved
+- Linux server successfully provisioned  
+- SSH service installed and running  
+- SSH key pair generated  
+- Passwordless authentication configured  
 
 ---
 
 ## Conclusion
-Automated container monitoring was successfully implemented using a shell script and cron job, enabling continuous tracking of resource usage for Docker containers.
+Secure remote access to the Linux server was successfully established using SSH key-based authentication, eliminating the need for password-based login and improving overall system security.
